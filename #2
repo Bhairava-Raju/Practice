@@ -1,0 +1,42 @@
+# house price prediction using multilinear regression
+import numpy as np
+x = np.array([
+    [1400, 3, 1, 20],
+    [1600, 4, 2, 15],
+    [1700, 3, 2, 10],
+    [1875, 4, 3, 5],
+    [1100, 2, 1, 30],
+])
+y = np.array([245, 312, 279, 308, 199])
+x = np.hstack((np.ones((x.shape[0], 1)), x))
+x_max = np.max(x, axis = 0)
+y_max = np.max(y)
+x = x/x_max
+y = y/y_max
+def compute_cost(x, y, w):
+    m = len(y)
+    predictions = x@w
+    return (1/(2*m))*np.sum((predictions - y)**2)
+def gradient_descent(x, y, w, alpha, epochs):
+    m = len(y)
+    cost_history = []
+    for i in range(epochs):
+        predictions = x@w
+        error = predictions - y
+        gradient = (1/m)*(x.T @ error)
+        w = w - alpha*gradient
+        cost = compute_cost(x, y, w)
+        cost_history.append(cost)
+        if i%100 == 0:
+            print("epochs = {} : cost = {:.5f}".format(i, cost))
+    return w, cost_history
+w = np.zeros(x.shape[1])
+alpha = 0.01
+epochs = 1000
+final_w, cost_history = gradient_descent(x, y, w, alpha, epochs)
+print("final weights:",final_w)
+new_house = np.array([1, 1500, 3, 2, 15])
+new_house = new_house/x_max
+predicted_price = new_house@final_w
+predicted_price = predicted_price*y_max
+print("\npredicted price: ${:.2f}".format(predicted_price*1000))
