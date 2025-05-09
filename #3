@@ -1,0 +1,67 @@
+//to find the height of an object by calculating the time between two audio peaks
+import pyaudio
+import numpy as np
+import wave
+import scipy.signal as signal
+
+# Recording parameters
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100  # Sample rate in Hz
+CHUNK = 1024  # Buffer size
+RECORD_SECONDS = 5  # Duration of recording
+OUTPUT_FILENAME = "output.wav"
+
+# Initialize PyAudio
+audio = pyaudio.PyAudio()
+
+# Start Recording
+stream = audio.open(format=FORMAT, channels=CHANNELS,
+                    rate=RATE, input=True,
+                    frames_per_buffer=CHUNK)
+
+print("Recording...")
+
+frames = []
+for _ in range(int(RATE / CHUNK * RECORD_SECONDS)):
+    data = stream.read(CHUNK)
+    frames.append(data)
+
+print("Recording finished.")
+
+# Stop and close stream
+stream.stop_stream()
+stream.close()
+audio.terminate()
+
+# Save the recorded data as a WAV file
+wf = wave.open(OUTPUT_FILENAME, 'wb')
+wf.setnchannels(CHANNELS)
+wf.setsampwidth(audio.get_sample_size(FORMAT))
+wf.setframerate(RATE)
+wf.writeframes(b''.join(frames))
+wf.close()
+
+# Read recorded audio
+wf = wave.open(OUTPUT_FILENAME, 'rb')
+frames = wf.readframes(wf.getnframes())
+wf.close()
+
+# Convert audio to numpy array
+audio_data = np.frombuffer(frames, dtype=np.int16)
+
+# Find peaks in the audio signal
+peaks, _ = signal.find_peaks(audio_data, height=np.max(audio_data) * 0.6, distance=RATE//10)
+
+# If at least two peaks are found, measure time difference
+if len(peaks) >= 2:
+    peak_times = peaks / RATE  # Convert sample indices to time (seconds)
+    time_diff = peak_times[1] - peak_times[0]
+    print(f"Time difference between two highest peaks: {time_diff:.4f} seconds")
+    #calculating height of the object using the formula h = 1/2 * g * t^2
+    g = 9.81
+    t = time_diff
+    ans = (1/2)*g*(t**2)
+    print(ans*100)
+else:
+    print("Not enough peaks detected.")
