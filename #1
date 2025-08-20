@@ -1,4 +1,4 @@
-//to find the 37th number that is divisile by 7 and has only odd digits
+#to find the 37th number that is divisile by 7 and has only odd digits
 def abc():
     mul=0
     a=0
